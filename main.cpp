@@ -22,8 +22,8 @@
 #include "factory_configurator_client.h"       // Required for fcc_* functions and FCC_* defines
 #include "m2mresource.h"                       // Required for M2MResource
 #include "key_config_manager.h"                // Required for kcm_factory_reset
-
 #include "mbed-trace/mbed_trace.h"             // Required for mbed_trace_*
+#include "BME280.h"
 
 // Pointers to the resources that will be created in main_application().
 static MbedCloudClient *cloud_client;
@@ -40,7 +40,11 @@ static M2MResource* m2m_put_res;
 static M2MResource* m2m_post_res;
 static M2MResource* m2m_deregister_res;
 static M2MResource* m2m_factory_reset_res;
+static M2MResource* m2m_temperature_res;
+static M2MResource* m2m_humidity_res;
+static M2MResource* m2m_pressure_res;
 static SocketAddress sa;
+static BME280 sensor(I2C_SDA, I2C_SCL);
 
 EventQueue queue(32 * EVENTS_EVENT_SIZE);
 Thread t;
@@ -57,7 +61,11 @@ void value_increment(void)
 {
     value_increment_mutex.lock();
     m2m_get_res->set_value(m2m_get_res->get_value_int() + 1);
+    m2m_temperature_res->set_value_float(sensor.getTemperature());
+    m2m_humidity_res->set_value_float(sensor.getHumidity());
+    m2m_pressure_res->set_value_float(sensor.getPressure());
     printf("Counter %" PRIu64 "\n", m2m_get_res->get_value_int());
+    printf("humidity = %5.2f%%, pressure = %8.2f, temerature = %5.2f\n", sensor.getHumidity(), sensor.getPressure(), sensor.getTemperature());
     value_increment_mutex.unlock();
 }
 
@@ -249,6 +257,15 @@ int main(void)
     if (m2m_factory_reset_res) {
         m2m_factory_reset_res->set_execute_function(factory_reset);
     }
+
+    // GET resource 3303/0/5700
+    m2m_temperature_res = M2MInterfaceFactory::create_resource(m2m_obj_list, 3303, 0, 5700, M2MResourceInstance::FLOAT, M2MBase::GET_ALLOWED);
+
+    // GET resource 3304/0/5700
+    m2m_humidity_res = M2MInterfaceFactory::create_resource(m2m_obj_list, 3304, 0, 5700, M2MResourceInstance::FLOAT, M2MBase::GET_ALLOWED);
+
+    // GET resource 3323/0/5700
+    m2m_pressure_res = M2MInterfaceFactory::create_resource(m2m_obj_list, 3323, 0, 5700, M2MResourceInstance::FLOAT, M2MBase::GET_ALLOWED);
 
     printf("Register Pelion Device Management Client\n\n");
 
