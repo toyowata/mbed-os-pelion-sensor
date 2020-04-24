@@ -50,7 +50,8 @@
             "storage_tdb_internal.internal_base_address": "(512*1024)",
             "storage_tdb_internal.internal_size"        : "(32*1024)",
             "storage.storage_type"                      : "TDB_INTERNAL",
-            "run-ci"                                    : 2
+            "run-ci"                                    : 2,
+            "user-button"                               : "BUTTON1"
         },
         "K66F": {
             "target.macros_add"                         : ["MBEDTLS_USER_CONFIG_FILE=\"mbedTLSConfig_mbedOS.h\""],
@@ -529,7 +530,8 @@
             "mbed-cloud-client.update-storage"          : "ARM_UCP_FLASHIAP",
             "storage_tdb_internal.internal_base_address": "(MBED_ROM_START+1024*1024)",
             "storage_tdb_internal.internal_size"        : "(32*1024)",
-            "storage.storage_type"                      : "TDB_INTERNAL"
+            "storage.storage_type"                      : "TDB_INTERNAL",
+            "user-button"                               : "D19"
         },
         "WIO_BG96": {
             "target.features_add"                       : ["LWIP", "STORAGE", "BOOTLOADER"],
@@ -557,7 +559,8 @@
             "mbed-cloud-client.update-storage"          : "ARM_UCP_FLASHIAP",
             "storage_tdb_internal.internal_base_address": "(MBED_ROM_START+1024*1024)",
             "storage_tdb_internal.internal_size"        : "(32*1024)",
-            "storage.storage_type"                      : "TDB_INTERNAL"
+            "storage.storage_type"                      : "TDB_INTERNAL",
+            "user-button"                               : "D19"
         },
         "UHURU_RAVEN": {
             "target.macros_remove"                      : ["MBEDTLS_CONFIG_HW_SUPPORT"],
@@ -617,6 +620,10 @@
             "help"           : "Configuration item to control the level of CI verification. 0 = ignored, 1 = build-only, 2 = build + E2E tests",
             "accepted_values": [0, 1, 2],
             "value"          : 1
+        },
+        "user-button": {
+            "help": "Push Button to send a packet.",
+            "required": true
         }
     }
 }

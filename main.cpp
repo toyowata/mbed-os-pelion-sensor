@@ -49,6 +49,20 @@ static BME280 sensor(I2C_SDA, I2C_SCL);
 EventQueue queue(32 * EVENTS_EVENT_SIZE);
 Thread t;
 Mutex value_increment_mutex;
+InterruptIn btn(MBED_CONF_APP_USER_BUTTON);
+
+/* Enable GPIO power for Wio target */
+#if defined(TARGET_WIO_3G) || defined(TARGET_WIO_BG96)
+DigitalOut GrovePower(GRO_POWR, 1);
+#endif
+
+void button_press(void)
+{
+    value_increment_mutex.lock();
+    m2m_get_res->set_value(m2m_get_res->get_value_int() + 1);
+    printf("Counter %" PRIu64 "\n", m2m_get_res->get_value_int());
+    value_increment_mutex.unlock();
+}
 
 void print_client_ids(void)
 {
@@ -60,12 +74,10 @@ void print_client_ids(void)
 void value_increment(void)
 {
     value_increment_mutex.lock();
-    m2m_get_res->set_value(m2m_get_res->get_value_int() + 1);
     m2m_temperature_res->set_value_float(sensor.getTemperature());
     m2m_humidity_res->set_value_float(sensor.getHumidity());
     m2m_pressure_res->set_value_float(sensor.getPressure());
-    printf("Counter %" PRIu64 "\n", m2m_get_res->get_value_int());
-    printf("humidity = %5.2f%%, pressure = %8.2f, temerature = %5.2f\n", sensor.getHumidity(), sensor.getPressure(), sensor.getTemperature());
+    printf("humidity = %5.2f%%, pressure = %7.2f hPa, temerature = %5.2f DegC\n", sensor.getHumidity(), sensor.getPressure(), sensor.getTemperature());
     value_increment_mutex.unlock();
 }
 
@@ -164,6 +176,7 @@ int main(void)
         printf("mbed_trace_init() failed with %d\n", status);
         return -1;
     }
+    btn.fall(queue.event(&button_press));
 
     // Mount default kvstore
     printf("Application ready\n");
