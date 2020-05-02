@@ -73,11 +73,16 @@ void print_client_ids(void)
 
 void value_increment(void)
 {
+    float t, h, p;
+    t = sensor.getTemperature();
+    h = sensor.getHumidity();
+    p = sensor.getPressure();
+    
     value_increment_mutex.lock();
-    m2m_temperature_res->set_value_float(sensor.getTemperature());
-    m2m_humidity_res->set_value_float(sensor.getHumidity());
-    m2m_pressure_res->set_value_float(sensor.getPressure());
-    printf("humidity = %5.2f%%, pressure = %7.2f hPa, temerature = %5.2f DegC\n", sensor.getHumidity(), sensor.getPressure(), sensor.getTemperature());
+    m2m_temperature_res->set_value_float(t);
+    m2m_humidity_res->set_value_float(h);
+    m2m_pressure_res->set_value_float(p);
+    printf("humidity = %5.2f%%, pressure = %7.2f hPa, temerature = %5.2f DegC\n", h, p, t);
     value_increment_mutex.unlock();
 }
 
