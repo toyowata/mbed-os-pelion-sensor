@@ -28,7 +28,7 @@
 // Pointers to the resources that will be created in main_application().
 static MbedCloudClient *cloud_client;
 static bool cloud_client_running = true;
-static NetworkInterface *network = NULL;
+NetworkInterface *network = NULL;
 static int error_count = 0;
 
 // Fake entropy needed for non-TRNG boards. Suitable only for demo devices.
@@ -46,10 +46,12 @@ static M2MResource* m2m_pressure_res;
 static SocketAddress sa;
 static BME280 sensor(I2C_SDA, I2C_SCL);
 
+void mqtt_thread();
+
 EventQueue queue(32 * EVENTS_EVENT_SIZE);
-Thread t;
+Thread t1, t2;
 Mutex value_increment_mutex;
-InterruptIn btn(MBED_CONF_APP_USER_BUTTON);
+//InterruptIn btn(MBED_CONF_APP_USER_BUTTON);
 
 /* Enable GPIO power for Wio target */
 #if defined(TARGET_WIO_3G) || defined(TARGET_WIO_BG96)
@@ -60,7 +62,7 @@ void button_press(void)
 {
     value_increment_mutex.lock();
     m2m_get_res->set_value(m2m_get_res->get_value_int() + 1);
-    printf("Counter %" PRIu64 "\n", m2m_get_res->get_value_int());
+    printf("[PDMC] Counter %" PRIu64 "\n", m2m_get_res->get_value_int());
     value_increment_mutex.unlock();
 }
 
@@ -82,7 +84,7 @@ void value_increment(void)
     m2m_temperature_res->set_value_float(t);
     m2m_humidity_res->set_value_float(h);
     m2m_pressure_res->set_value_float(p);
-    printf("humidity = %5.2f%%, pressure = %7.2f hPa, temerature = %5.2f DegC\n", h, p, t);
+    printf("[PDMC] humidity = %5.2f%%, pressure = %7.2f hPa, temerature = %5.2f DegC\n", h, p, t);
     value_increment_mutex.unlock();
 }
 
@@ -181,7 +183,7 @@ int main(void)
         printf("mbed_trace_init() failed with %d\n", status);
         return -1;
     }
-    btn.fall(queue.event(&button_press));
+    //btn.fall(queue.event(&button_press));
 
     // Mount default kvstore
     printf("Application ready\n");
@@ -193,7 +195,9 @@ int main(void)
 
     // Connect with NetworkInterface
     printf("Connect to network\n");
-    network = NetworkInterface::get_default_instance();
+    if (network == NULL) {
+        network = NetworkInterface::get_default_instance();
+    }
     if (network == NULL) {
         printf("Failed to get default NetworkInterface\n");
         return -1;
@@ -209,6 +213,8 @@ int main(void)
         return -2;
     }
     printf("Network initialized, connected with IP %s\n\n", sa.get_ip_address());
+
+    t2.start(mqtt_thread);
 
     // Run developer flow
     printf("Start developer flow\n");
@@ -298,7 +304,7 @@ int main(void)
     cloud_client->add_objects(m2m_obj_list);
     cloud_client->setup(network);
 
-    t.start(callback(&queue, &EventQueue::dispatch_forever));
+    t1.start(callback(&queue, &EventQueue::dispatch_forever));
     queue.call_every(5000, value_increment);
 
     // Flush the stdin buffer before reading from it

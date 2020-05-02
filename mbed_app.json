@@ -5,7 +5,8 @@
         "MBED_CLOUD_CLIENT_USER_CONFIG_FILE=\"mbed_cloud_client_user_config.h\"",
         "ARM_UC_USE_PAL_BLOCKDEVICE=1",
         "PAL_PLATFORM_DEFINED_CONFIGURATION=\"mbedOS_SST.h\"",
-        "PAL_USER_DEFINED_CONFIGURATION=\"mbedOS_SST.h\""
+        "PAL_USER_DEFINED_CONFIGURATION=\"mbedOS_SST.h\"",
+        "MBEDTLS_SHA1_C=1"
     ],
     "target_overrides": {
         "*": {
@@ -17,6 +18,7 @@
             "rtos.main-thread-stack-size"               : 5120,
             "update-client.storage-locations"           : 1,
             "mbed-trace.enable"                         : null,
+            "mbed-client-pal.rsa-required"              : true,
             "events.shared-stacksize"                   : 2048,
             "nsapi.default-wifi-security"               : "WPA_WPA2",
             "nsapi.default-wifi-ssid"                   : "\"SSID\"",
@@ -34,7 +36,7 @@
             "lwip.mem-size"                             : 12500
         },
         "K64F": {
-            "target.macros_add"                         : ["MBEDTLS_USER_CONFIG_FILE=\"mbedTLSConfig_mbedOS.h\""],
+            "target.macros_add"                         : ["MBEDTLS_USER_CONFIG_FILE=\"mbedTLSConfig_mbedOS_MQTT.h\""],
             "target.network-default-interface-type"     : "ETHERNET",
             "target.bootloader_img"                     : "bootloader/mbed-bootloader-k64f-internal_flash-no_rot-v4.1.0.bin",
             "target.header_offset"                      : "0x8000",
@@ -51,10 +53,13 @@
             "storage_tdb_internal.internal_size"        : "(32*1024)",
             "storage.storage_type"                      : "TDB_INTERNAL",
             "run-ci"                                    : 2,
+            "led-pin"                                   : "LED3",
+            "led-on"                                    : 0,
+            "led-off"                                   : 1,
             "user-button"                               : "BUTTON1"
         },
         "K66F": {
-            "target.macros_add"                         : ["MBEDTLS_USER_CONFIG_FILE=\"mbedTLSConfig_mbedOS.h\""],
+            "target.macros_add"                         : ["MBEDTLS_USER_CONFIG_FILE=\"mbedTLSConfig_mbedOS_MQTT.h\""],
             "target.network-default-interface-type"     : "ETHERNET",
             "target.bootloader_img"                     : "bootloader/mbed-bootloader-k66f-internal_flash-no_rot-v4.1.0.bin",
             "target.header_offset"                      : "0x8000",
@@ -72,7 +77,7 @@
             "run-ci"                                    : 2
         },
         "NUCLEO_F429ZI": {
-            "target.macros_add"                         : ["MBEDTLS_USER_CONFIG_FILE=\"mbedTLSConfig_mbedOS.h\""],
+            "target.macros_add"                         : ["MBEDTLS_USER_CONFIG_FILE=\"mbedTLSConfig_mbedOS_MQTT.h\""],
             "target.network-default-interface-type"     : "ETHERNET",
             "target.bootloader_img"                     : "bootloader/mbed-bootloader-nucleo_f429zi-internal_flash-no_rot-v4.1.0.bin",
             "target.header_offset"                      : "0x8000",
@@ -86,7 +91,11 @@
             "mbed-cloud-client.update-storage"          : "ARM_UCP_FLASHIAP",
             "storage_tdb_internal.internal_base_address": "(MBED_ROM_START+1024*1024)",
             "storage_tdb_internal.internal_size"        : "(128*1024)",
-            "storage.storage_type"                      : "TDB_INTERNAL"
+            "storage.storage_type"                      : "TDB_INTERNAL",
+            "led-pin"                                   : "LED1",
+            "led-on"                                    : 1,
+            "led-off"                                   : 0,
+            "user-button"                               : "USER_BUTTON"
         },
         "UBLOX_EVK_ODIN_W2": {
             "target.macros_add"                         : ["MBEDTLS_USER_CONFIG_FILE=\"mbedTLSConfig_mbedOS.h\""],
@@ -484,7 +493,7 @@
             "storage.storage_type"                      : "TDB_INTERNAL"
         },
         "GR_LYCHEE": {
-            "target.macros_add"                         : ["MBEDTLS_USER_CONFIG_FILE=\"mbedTLSConfig_mbedOS.h\""],
+            "target.macros_add"                         : ["MBEDTLS_USER_CONFIG_FILE=\"mbedTLSConfig_mbedOS_MQTT.h\""],
             "target.bootloader_supported"               : true,
             "target.network-default-interface-type"     : "WIFI",
             "target.components_add"                     : ["WIFI_ESP32"],
@@ -504,8 +513,12 @@
             "storage.storage_type"                      : "TDB_INTERNAL"
         },
         "WIO_3G": {
+            "led-pin"                                   : "D20",
+            "led-on"                                    : 1,
+            "led-off"                                   : 0,
+            "user-button"                               : "D19",
             "target.features_add"                       : ["LWIP", "STORAGE", "BOOTLOADER"],
-            "target.macros_add"                         : ["MBEDTLS_USER_CONFIG_FILE=\"mbedTLSConfig_mbedOS.h\""],
+            "target.macros_add"                         : ["MBEDTLS_USER_CONFIG_FILE=\"mbedTLSConfig_mbedOS_MQTT.h\""],
             "target.device_has_remove"                  : ["SERIAL_FC"],
             "target.network-default-interface-type"     : "CELLULAR",
             "target.components_add"                     : ["FLASHIAP"],
@@ -530,12 +543,15 @@
             "mbed-cloud-client.update-storage"          : "ARM_UCP_FLASHIAP",
             "storage_tdb_internal.internal_base_address": "(MBED_ROM_START+1024*1024)",
             "storage_tdb_internal.internal_size"        : "(32*1024)",
-            "storage.storage_type"                      : "TDB_INTERNAL",
-            "user-button"                               : "D19"
+            "storage.storage_type"                      : "TDB_INTERNAL"
         },
         "WIO_BG96": {
+            "led-pin"                                   : "D20",
+            "led-on"                                    : 1,
+            "led-off"                                   : 0,
+            "user-button"                               : "D19",
             "target.features_add"                       : ["LWIP", "STORAGE", "BOOTLOADER"],
-            "target.macros_add"                         : ["MBEDTLS_USER_CONFIG_FILE=\"mbedTLSConfig_mbedOS.h\""],
+            "target.macros_add"                         : ["MBEDTLS_USER_CONFIG_FILE=\"mbedTLSConfig_mbedOS_MQTT.h\""],
             "target.network-default-interface-type"     : "CELLULAR",
             "target.components_add"                     : ["FLASHIAP"],
             "target.bootloader_img"                     : "bootloader/mbed-bootloader-wio_3g-internal_flash-no_rot-v4.1.2.bin",
@@ -559,12 +575,11 @@
             "mbed-cloud-client.update-storage"          : "ARM_UCP_FLASHIAP",
             "storage_tdb_internal.internal_base_address": "(MBED_ROM_START+1024*1024)",
             "storage_tdb_internal.internal_size"        : "(32*1024)",
-            "storage.storage_type"                      : "TDB_INTERNAL",
-            "user-button"                               : "D19"
+            "storage.storage_type"                      : "TDB_INTERNAL"
         },
         "UHURU_RAVEN": {
             "target.macros_remove"                      : ["MBEDTLS_CONFIG_HW_SUPPORT"],
-            "target.macros_add"                         : ["MBEDTLS_USER_CONFIG_FILE=\"mbedTLSConfig_mbedOS.h\""],
+            "target.macros_add"                         : ["MBEDTLS_USER_CONFIG_FILE=\"mbedTLSConfig_mbedOS_MQTT.h\""],
             "target.network-default-interface-type"     : "WIFI",
             "target.components_add"                     : ["WIFI_ESP32", "FLASHIAP"],
             "target.bootloader_img"                     : "bootloader/mbed-bootloader-stm32f767-internal_flash-no_rot-v4.1.2.bin",
@@ -591,7 +606,7 @@
         },
         "NUCLEO_F767ZI": {
             "target.macros_remove"                      : ["MBEDTLS_CONFIG_HW_SUPPORT"],
-            "target.macros_add"                         : ["MBEDTLS_USER_CONFIG_FILE=\"mbedTLSConfig_mbedOS.h\""],
+            "target.macros_add"                         : ["MBEDTLS_USER_CONFIG_FILE=\"mbedTLSConfig_mbedOS_MQTT.h\""],
             "target.network-default-interface-type"     : "ETHERNET",
             "target.bootloader_img"                     : "bootloader/mbed-bootloader-stm32f767-internal_flash-no_rot-v4.1.2.bin",
             "target.header_offset"                      : "0x18000",
@@ -620,6 +635,18 @@
             "help"           : "Configuration item to control the level of CI verification. 0 = ignored, 1 = build-only, 2 = build + E2E tests",
             "accepted_values": [0, 1, 2],
             "value"          : 1
+        },
+        "led-pin": {
+            "help": "LED pin.",
+            "required": true
+        },
+        "led-on": {
+            "help": "Digital pin state when LED is turned on.",
+            "required": true
+        },
+        "led-off": {
+            "help": "Digital pin state when LED is turned off.",
+            "required": true
         },
         "user-button": {
             "help": "Push Button to send a packet.",
