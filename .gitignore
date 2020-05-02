@@ -48,3 +48,4 @@
 /drivers/COMPONENT_WIFI_ISM43362/
 /drivers/storage/COMPONENT_NUSD/
 /TESTS/pelion-e2e-python-test-library/
+/MQTT_server_setting.h
