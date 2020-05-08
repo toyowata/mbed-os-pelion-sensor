@@ -15,7 +15,7 @@
             "platform.stdio-convert-newlines"           : true,
             "platform.stdio-buffered-serial"            : true,
             "platform.stdio-flush-at-exit"              : true,
-            "rtos.main-thread-stack-size"               : 5120,
+            "rtos.main-thread-stack-size"               : 4096,
             "update-client.storage-locations"           : 1,
             "mbed-trace.enable"                         : null,
             "mbed-client-pal.rsa-required"              : true,
@@ -309,7 +309,7 @@
             "target.macros_add"                         : ["MBEDTLS_USER_CONFIG_FILE=\"mbedTLSConfig_mbedOS_SW_TRNG_PSA.h\"", "MBEDTLS_PSA_CRYPTO_C", "MBEDTLS_ENTROPY_NV_SEED", "PAL_USE_HW_TRNG=0", "ESP8266_SEND_TIMEOUT=8000"]
         },
         "DISCO_L475VG_IOT01A": {
-            "target.macros_add"                         : ["MBEDTLS_USER_CONFIG_FILE=\"mbedTLSConfig_mbedOS.h\""],
+            "target.macros_add"                         : ["MBEDTLS_USER_CONFIG_FILE=\"mbedTLSConfig_mbedOS_MQTT.h\""],
             "target.network-default-interface-type"     : "WIFI",
             "target.bootloader_img"                     : "bootloader/mbed-bootloader-disco_l475vg_iot01a-external_kvstore-qspif-v4.1.1.bin",
             "target.header_offset"                      : "0x11000",
@@ -332,7 +332,11 @@
             "update-client.firmware-header-version"     : "2",
             "update-client.storage-address"             : "(MBED_CONF_STORAGE_FILESYSTEM_EXTERNAL_BASE_ADDRESS + MBED_CONF_STORAGE_FILESYSTEM_EXTERNAL_SIZE)",
             "update-client.storage-locations"           : 1,
-            "update-client.storage-size"                : "((MBED_ROM_START + MBED_ROM_SIZE - APPLICATION_ADDR) * MBED_CONF_UPDATE_CLIENT_STORAGE_LOCATIONS)"
+            "update-client.storage-size"                : "((MBED_ROM_START + MBED_ROM_SIZE - APPLICATION_ADDR) * MBED_CONF_UPDATE_CLIENT_STORAGE_LOCATIONS)",
+            "led-pin"                                   : "LED1",
+            "led-on"                                    : 1,
+            "led-off"                                   : 0,
+            "user-button"                               : "USER_BUTTON"
         },
         "DISCO_L496AG": {
             "target.macros_add": [
@@ -490,7 +494,11 @@
             "mbed-cloud-client.update-storage"          : "ARM_UCP_FLASHIAP",
             "storage_tdb_internal.internal_base_address": "(MBED_ROM_START+4*1024*1024)",
             "storage_tdb_internal.internal_size"        : "(2*24*1024)",
-            "storage.storage_type"                      : "TDB_INTERNAL"
+            "storage.storage_type"                      : "TDB_INTERNAL",
+            "led-pin"                                   : "LED1",
+            "led-on"                                    : 1,
+            "led-off"                                   : 0,
+            "user-button"                               : "USER_BUTTON0"
         },
         "GR_LYCHEE": {
             "target.macros_add"                         : ["MBEDTLS_USER_CONFIG_FILE=\"mbedTLSConfig_mbedOS_MQTT.h\""],
@@ -510,15 +518,15 @@
             "mbed-cloud-client.update-storage"          : "ARM_UCP_FLASHIAP",
             "storage_tdb_internal.internal_base_address": "(MBED_ROM_START+4*1024*1024)",
             "storage_tdb_internal.internal_size"        : "(2*24*1024)",
-            "storage.storage_type"                      : "TDB_INTERNAL"
-        },
-        "WIO_3G": {
-            "led-pin"                                   : "D20",
+            "storage.storage_type"                      : "TDB_INTERNAL",
+            "led-pin"                                   : "LED1",
             "led-on"                                    : 1,
             "led-off"                                   : 0,
-            "user-button"                               : "D19",
-            "target.features_add"                       : ["LWIP", "STORAGE", "BOOTLOADER"],
+            "user-button"                               : "USER_BUTTON0"
+        },
+        "WIO_3G": {
             "target.macros_add"                         : ["MBEDTLS_USER_CONFIG_FILE=\"mbedTLSConfig_mbedOS_MQTT.h\""],
+            "target.features_add"                       : ["LWIP", "STORAGE", "BOOTLOADER"],
             "target.device_has_remove"                  : ["SERIAL_FC"],
             "target.network-default-interface-type"     : "CELLULAR",
             "target.components_add"                     : ["FLASHIAP"],
@@ -533,8 +541,6 @@
             "lwip.ethernet-enabled"                     : false,
             "lwip.ppp-enabled"                          : true,
             "lwip.tcp-enabled"                          : true,
-            "lwip.pbuf-pool-size"                       : 16,
-            "lwip.mem-size"                             : 12500,
             "update-client.bootloader-details"          : "0x08005ee8",
             "update-client.application-details"         : "(MBED_ROM_START + MBED_BOOTLOADER_SIZE)",
             "update-client.storage-address"             : "(MBED_CONF_STORAGE_TDB_INTERNAL_INTERNAL_BASE_ADDRESS+MBED_CONF_STORAGE_TDB_INTERNAL_INTERNAL_SIZE)",
@@ -543,7 +549,11 @@
             "mbed-cloud-client.update-storage"          : "ARM_UCP_FLASHIAP",
             "storage_tdb_internal.internal_base_address": "(MBED_ROM_START+1024*1024)",
             "storage_tdb_internal.internal_size"        : "(32*1024)",
-            "storage.storage_type"                      : "TDB_INTERNAL"
+            "storage.storage_type"                      : "TDB_INTERNAL",
+            "led-pin"                                   : "D20",
+            "led-on"                                    : 1,
+            "led-off"                                   : 0,
+            "user-button"                               : "D19"
         },
         "WIO_BG96": {
             "led-pin"                                   : "D20",

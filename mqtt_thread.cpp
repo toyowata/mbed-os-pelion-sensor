@@ -179,12 +179,12 @@ void mqtt_thread(void)
     }
     printf("Client has subscribed a topic \"%s\".\r\n", MQTT_TOPIC_SUB);
     printf("\r\n");
-
+    
     // Enable button 1
     InterruptIn btn1 = InterruptIn(MBED_CONF_APP_USER_BUTTON);
     btn1.rise(btn1_rise_handler);
     
-    printf("To send a packet, push the button 1 on your board.\r\n\r\n");
+    printf("To send a packet, push the button on your board.\r\n\r\n");
 
     // Turn off the LED to let users know connection process done.
     led = LED_OFF;
