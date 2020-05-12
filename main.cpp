@@ -27,9 +27,9 @@
 
 // Pointers to the resources that will be created in main_application().
 static MbedCloudClient *cloud_client;
-static bool cloud_client_running = true;
-static NetworkInterface *network = NULL;
+static bool cloud_client_running = false;
 static int error_count = 0;
+NetworkInterface *network = NULL;
 
 // Fake entropy needed for non-TRNG boards. Suitable only for demo devices.
 const uint8_t MBED_CLOUD_DEV_ENTROPY[] = { 0xf6, 0xd6, 0xc0, 0x09, 0x9e, 0x6e, 0xf2, 0x37, 0xdc, 0x29, 0x88, 0xf1, 0x57, 0x32, 0x7d, 0xde, 0xac, 0xb3, 0x99, 0x8c, 0xb9, 0x11, 0x35, 0x18, 0xeb, 0x48, 0x29, 0x03, 0x6a, 0x94, 0x6d, 0xe8, 0x40, 0xc0, 0x28, 0xcc, 0xe4, 0x04, 0xc3, 0x1f, 0x4b, 0xc2, 0xe0, 0x68, 0xa0, 0x93, 0xe6, 0x3a };
@@ -45,11 +45,15 @@ static M2MResource* m2m_humidity_res;
 static M2MResource* m2m_pressure_res;
 static SocketAddress sa;
 static BME280 sensor(I2C_SDA, I2C_SCL);
+static InterruptIn btn1(MBED_CONF_APP_USER_BUTTON);
 
 EventQueue queue(32 * EVENTS_EVENT_SIZE);
-Thread t;
-Mutex value_increment_mutex;
-InterruptIn btn(MBED_CONF_APP_USER_BUTTON);
+Thread t1, t2;
+Mutex value_mesurement_mutex;
+int button_count = 0;
+
+void mqtt_thread();
+extern volatile bool isPublish;
 
 /* Enable GPIO power for Wio target */
 #if defined(TARGET_WIO_3G) || defined(TARGET_WIO_BG96)
@@ -58,10 +62,12 @@ DigitalOut GrovePower(GRO_POWR, 1);
 
 void button_press(void)
 {
-    value_increment_mutex.lock();
+    value_mesurement_mutex.lock();
     m2m_get_res->set_value(m2m_get_res->get_value_int() + 1);
-    printf("Counter %" PRIu64 "\n", m2m_get_res->get_value_int());
-    value_increment_mutex.unlock();
+    button_count = m2m_get_res->get_value_int();
+    printf("[PDM] Counter %d\n", button_count);
+    isPublish = true;
+    value_mesurement_mutex.unlock();
 }
 
 void print_client_ids(void)
@@ -71,19 +77,23 @@ void print_client_ids(void)
     printf("Device ID: %s\n\n", cloud_client->endpoint_info()->endpoint_name.c_str());
 }
 
-void value_increment(void)
+void value_measurement(void)
 {
+    if (!cloud_client_running) {
+        return;
+    }
+
     float t, h, p;
     t = sensor.getTemperature();
     h = sensor.getHumidity();
     p = sensor.getPressure();
     
-    value_increment_mutex.lock();
+    value_mesurement_mutex.lock();
     m2m_temperature_res->set_value_float(t);
     m2m_humidity_res->set_value_float(h);
     m2m_pressure_res->set_value_float(p);
-    printf("humidity = %5.2f%%, pressure = %7.2f hPa, temerature = %5.2f DegC\n", h, p, t);
-    value_increment_mutex.unlock();
+    printf("[PDM] humidity = %5.2f%%, pressure = %7.2f hPa, temperature = %5.2f DegC\n", h, p, t);
+    value_mesurement_mutex.unlock();
 }
 
 void get_res_update(const char* /*object_name*/)
@@ -120,6 +130,7 @@ void client_registered(void)
     printf("Client registered.\n");
     print_client_ids();
     error_count = 0;
+    cloud_client_running = true;
 }
 
 void client_registration_updated(void)
@@ -181,7 +192,6 @@ int main(void)
         printf("mbed_trace_init() failed with %d\n", status);
         return -1;
     }
-    btn.fall(queue.event(&button_press));
 
     // Mount default kvstore
     printf("Application ready\n");
@@ -193,7 +203,9 @@ int main(void)
 
     // Connect with NetworkInterface
     printf("Connect to network\n");
-    network = NetworkInterface::get_default_instance();
+    if (network == NULL) {
+        network = NetworkInterface::get_default_instance();
+    }
     if (network == NULL) {
         printf("Failed to get default NetworkInterface\n");
         return -1;
@@ -298,11 +310,20 @@ int main(void)
     cloud_client->add_objects(m2m_obj_list);
     cloud_client->setup(network);
 
-    t.start(callback(&queue, &EventQueue::dispatch_forever));
-    queue.call_every(5000, value_increment);
+    t1.start(callback(&queue, &EventQueue::dispatch_forever));
+    queue.call_every(5000, value_measurement);
 
     // Flush the stdin buffer before reading from it
     flush_stdin_buffer();
+
+    btn1.mode(PullUp);
+    btn1.fall(queue.event(button_press));
+
+    // Waiting for PDM register
+    while(!cloud_client_running) {
+        ThisThread::sleep_for(1);
+    }
+    t2.start(mqtt_thread);
 
     while(cloud_client_running) {
         int in_char = getchar();
@@ -315,7 +336,7 @@ int main(void)
             ThisThread::sleep_for(1*1000);
             NVIC_SystemReset();
         } else if (in_char > 0 && in_char != 0x03) { // Ctrl+C is 0x03 in Mbed OS and Linux returns negative number
-            value_increment(); // Simulate button press
+            value_measurement(); // Update sensor value
             continue;
         }
         deregister_client();
