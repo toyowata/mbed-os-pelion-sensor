@@ -45,12 +45,15 @@ static M2MResource* m2m_humidity_res;
 static M2MResource* m2m_pressure_res;
 static SocketAddress sa;
 static BME280 sensor(I2C_SDA, I2C_SCL);
-
-void mqtt_thread();
+static InterruptIn btn1(MBED_CONF_APP_USER_BUTTON);
 
 EventQueue queue(32 * EVENTS_EVENT_SIZE);
 Thread t1, t2;
 Mutex value_mesurement_mutex;
+int button_count = 0;
+
+void mqtt_thread();
+extern volatile bool isPublish;
 
 /* Enable GPIO power for Wio target */
 #if defined(TARGET_WIO_3G) || defined(TARGET_WIO_BG96)
@@ -61,7 +64,9 @@ void button_press(void)
 {
     value_mesurement_mutex.lock();
     m2m_get_res->set_value(m2m_get_res->get_value_int() + 1);
-    printf("[PDM] Counter %" PRIu64 "\n", m2m_get_res->get_value_int());
+    button_count = m2m_get_res->get_value_int();
+    printf("[PDM] Counter %d\n", button_count);
+    isPublish = true;
     value_mesurement_mutex.unlock();
 }
 
@@ -87,7 +92,7 @@ void value_measurement(void)
     m2m_temperature_res->set_value_float(t);
     m2m_humidity_res->set_value_float(h);
     m2m_pressure_res->set_value_float(p);
-    printf("[PDM] humidity = %5.2f%%, pressure = %7.2f hPa, temerature = %5.2f DegC\n", h, p, t);
+    printf("[PDM] humidity = %5.2f%%, pressure = %7.2f hPa, temperature = %5.2f DegC\n", h, p, t);
     value_mesurement_mutex.unlock();
 }
 
@@ -310,6 +315,9 @@ int main(void)
 
     // Flush the stdin buffer before reading from it
     flush_stdin_buffer();
+
+    btn1.mode(PullUp);
+    btn1.fall(queue.event(button_press));
 
     // Waiting for PDM register
     while(!cloud_client_running) {

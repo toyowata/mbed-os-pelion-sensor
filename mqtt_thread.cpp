@@ -40,7 +40,7 @@
 #define LED_ON  MBED_CONF_APP_LED_ON
 #define LED_OFF MBED_CONF_APP_LED_OFF
 
-static volatile bool isPublish = false;
+volatile bool isPublish = false;
 
 /* Flag to be set when received a message from the server. */
 static volatile bool isMessageArrived = false;
@@ -49,7 +49,7 @@ const int MESSAGE_BUFFER_SIZE = 256;
 /* Buffer for a receiving message. */
 char messageBuffer[MESSAGE_BUFFER_SIZE];
 extern NetworkInterface* network;
-void button_press(void);
+extern int button_count;
 
 /*
  * Callback function called when a message arrived from server.
@@ -68,12 +68,6 @@ void messageArrived(MQTT::MessageData& md)
     isMessageArrived = true;
 }
 
-/*
- * Callback function called when the button1 is clicked.
- */
-void btn1_rise_handler() {
-    isPublish = true;
-}
 
 void mqtt_thread(void)
 {    
@@ -83,13 +77,6 @@ void mqtt_thread(void)
     MQTTClient* mqttClient = NULL;
 
     DigitalOut led(MBED_CONF_APP_LED_PIN, LED_ON);
-
-    printf("HelloMQTT: version is %.2f\r\n", version);
-    printf("\r\n");
-
-#ifdef MBED_MAJOR_VERSION
-    printf("Mbed OS version %d.%d.%d\n\n", MBED_MAJOR_VERSION, MBED_MINOR_VERSION, MBED_PATCH_VERSION);
-#endif
 
     printf("Opening network interface...\r\n");
     {
@@ -123,7 +110,7 @@ void mqtt_thread(void)
     set_time(now);
     printf("Time is now %s", ctime(&now));
 
-    printf("Connecting to host %s:%d ...\r\n", MQTT_SERVER_HOST_NAME, MQTT_SERVER_PORT);
+    printf("[AWS] Connecting to host %s:%d ...\r\n", MQTT_SERVER_HOST_NAME, MQTT_SERVER_PORT);
     {
         nsapi_error_t ret = socket->open(network);
         if (ret != NSAPI_ERROR_OK) {
@@ -146,10 +133,9 @@ void mqtt_thread(void)
             ThisThread::sleep_for(-1);
         }
     }
-    printf("Connection established.\r\n");
-    printf("\r\n");
+    printf("[AWS] Connection established.\r\n");
 
-    printf("MQTT client is trying to connect the server ...\r\n");
+    printf("[AWS] MQTT client is trying to connect the server ...\r\n");
     {
         MQTTPacket_connectData data = MQTTPacket_connectData_initializer;
         data.MQTTVersion = 3;
@@ -160,31 +146,26 @@ void mqtt_thread(void)
         mqttClient = new MQTTClient(socket);
         int rc = mqttClient->connect(data);
         if (rc != MQTT::SUCCESS) {
-            printf("ERROR: rc from MQTT connect is %d\r\n", rc);
+            printf("[AWS] ERROR: rc from MQTT connect is %d\r\n", rc);
             ThisThread::sleep_for(-1);
         }
     }
-    printf("Client connected.\r\n");
+    printf("[AWS] Client connected.\r\n");
     printf("\r\n");
 
-
-    printf("Client is trying to subscribe a topic \"%s\".\r\n", MQTT_TOPIC_SUB);
+    printf("[AWS] Client is trying to subscribe a topic \"%s\".\r\n", MQTT_TOPIC_SUB);
     {
         int rc = mqttClient->subscribe(MQTT_TOPIC_SUB, MQTT::QOS0, messageArrived);
         if (rc != MQTT::SUCCESS) {
-            printf("ERROR: rc from MQTT subscribe is %d\r\n", rc);
-            //return -1;
+            printf("[AWS] ERROR: rc from MQTT subscribe is %d\r\n", rc);
         }
         isSubscribed = true;
     }
-    printf("Client has subscribed a topic \"%s\".\r\n", MQTT_TOPIC_SUB);
-    printf("\r\n");
+    printf("[AWS] Client has subscribed a topic \"%s\".\r\n", MQTT_TOPIC_SUB);
     
-    // Enable button 1
-    InterruptIn btn1 = InterruptIn(MBED_CONF_APP_USER_BUTTON);
-    btn1.rise(btn1_rise_handler);
+    isPublish = false;
     
-    printf("To send a packet, push the button on your board.\r\n\r\n");
+    printf("[AWS] To send a packet, push the button on your board.\r\n\r\n");
 
     // Turn off the LED to let users know connection process done.
     led = LED_OFF;
@@ -208,10 +189,6 @@ void mqtt_thread(void)
         if(isPublish) {
             isPublish = false;
             static unsigned short id = 0;
-            static unsigned int count = 0;
-
-            count++;
-            button_press();
 
             // When sending a message, LED lights blue.
             led = LED_ON;
@@ -226,14 +203,13 @@ void mqtt_thread(void)
 
             message.qos = MQTT::QOS0;
             message.id = id++;
-            int ret = snprintf(buf, buf_size, "%d", count);
+            int ret = snprintf(buf, buf_size, "%d", button_count);
             if(ret < 0) {
                 printf("[AWS] ERROR: snprintf() returns %d.", ret);
                 continue;
             }
             message.payloadlen = ret;
             // Publish a message.
-            printf("[AWS] Publishing message.\r\n");
             int rc = mqttClient->publish(MQTT_TOPIC_SUB, message);
             if(rc != MQTT::SUCCESS) {
                 printf("[AWS] ERROR: rc from MQTT publish is %d\r\n", rc);
