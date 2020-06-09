@@ -54,6 +54,8 @@ int button_count = 0;
 
 void mqtt_thread();
 extern volatile bool isPublish;
+extern volatile bool isButtonClicked;
+char json[100];
 
 /* Enable GPIO power for Wio target */
 #if defined(TARGET_WIO_3G) || defined(TARGET_WIO_BG96)
@@ -67,6 +69,8 @@ void button_press(void)
     button_count = m2m_get_res->get_value_int();
     printf("[PDM] Counter %d\n", button_count);
     isPublish = true;
+    isButtonClicked = true;
+    snprintf(json, sizeof(json), "{\"isButtonClicked\":true}\n");
     value_mesurement_mutex.unlock();
 }
 
@@ -92,8 +96,10 @@ void value_measurement(void)
     m2m_temperature_res->set_value_float(t);
     m2m_humidity_res->set_value_float(h);
     m2m_pressure_res->set_value_float(p);
-    printf("[PDM] humidity = %5.2f%%, pressure = %7.2f hPa, temperature = %5.2f DegC\n", h, p, t);
+    snprintf(json, sizeof(json), "{\"humidity\":%5.2f, \"pressure\":%7.2f, \"temperature\":%5.2f}\n", h, p, t);
+    isPublish = true;
     value_mesurement_mutex.unlock();
+    
 }
 
 void get_res_update(const char* /*object_name*/)
