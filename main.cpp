@@ -96,6 +96,7 @@ void value_measurement(void)
     m2m_temperature_res->set_value_float(t);
     m2m_humidity_res->set_value_float(h);
     m2m_pressure_res->set_value_float(p);
+    printf("[PDM] humidity = %5.2f%%, pressure = %7.2f hPa, temperature = %5.2f DegC\n", h, p, t);
     snprintf(json, sizeof(json), "{\"humidity\":%5.2f, \"pressure\":%7.2f, \"temperature\":%5.2f}\n", h, p, t);
     isPublish = true;
     value_mesurement_mutex.unlock();
