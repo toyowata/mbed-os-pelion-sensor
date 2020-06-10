@@ -153,6 +153,16 @@ void mqtt_thread(void)
     printf("[AWS] Client connected.\r\n");
     printf("\r\n");
     
+    printf("[AWS] Client is trying to subscribe a topic \"%s\".\r\n", MQTT_TOPIC_CMD);
+    {
+        int rc = mqttClient->subscribe(MQTT_TOPIC_CMD, MQTT::QOS0, messageArrived);
+        if (rc != MQTT::SUCCESS) {
+            printf("[AWS] ERROR: rc from MQTT subscribe is %d\r\n", rc);
+        }
+        isSubscribed = true;
+    }
+    printf("[AWS] Client has subscribed a topic \"%s\".\r\n", MQTT_TOPIC_CMD);
+    
     isPublish = false;
     
     printf("[AWS] To send a packet, push the button on your board.\r\n\r\n");

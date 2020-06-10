@@ -70,7 +70,7 @@ void button_press(void)
     printf("[PDM] Counter %d\n", button_count);
     isPublish = true;
     isButtonClicked = true;
-    snprintf(json, sizeof(json), "{\"isButtonClicked\":true}\n");
+    snprintf(json, sizeof(json), "{\"is_button_clicked\":true,\"count\":%d}\n", button_count);
     value_mesurement_mutex.unlock();
 }
 
