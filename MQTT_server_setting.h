@@ -2,11 +2,9 @@
 #define __MQTT_SERVER_SETTING_H__
 
 const char MQTT_SERVER_HOST_NAME[] = "<< REPLACE_HERE >>";
-const char MQTT_CLIENT_ID[] = "MQTT_CLIENT_ID";
-const char MQTT_USERNAME[] = "MQTT_USERNAME";
-const char MQTT_PASSWORD[] = "MQTT_USERNAME";
-const char MQTT_TOPIC_PUB[] = "MQTT_TOPIC_PUB";
-const char MQTT_TOPIC_SUB[] = "MQTT_TOPIC_SUB";
+const char MQTT_CLIENT_ID[] = "device-1";
+const char MQTT_TOPIC_CMD[] = "cmd/area-1/device-1";
+const char MQTT_TOPIC_DATA[] = "data/area-1/device-1";
 
 
 const int MQTT_SERVER_PORT = 8883;

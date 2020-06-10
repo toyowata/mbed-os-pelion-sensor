@@ -41,7 +41,9 @@
 #define LED_OFF MBED_CONF_APP_LED_OFF
 
 volatile bool isPublish = false;
+volatile bool isButtonClicked = false;
 
+extern char json[100];
 /* Flag to be set when received a message from the server. */
 static volatile bool isMessageArrived = false;
 /* Buffer size for a receiving message. */
@@ -140,8 +142,6 @@ void mqtt_thread(void)
         MQTTPacket_connectData data = MQTTPacket_connectData_initializer;
         data.MQTTVersion = 3;
         data.clientID.cstring = (char *)MQTT_CLIENT_ID;
-        data.username.cstring = (char *)MQTT_USERNAME;
-        data.password.cstring = (char *)MQTT_PASSWORD;
 
         mqttClient = new MQTTClient(socket);
         int rc = mqttClient->connect(data);
@@ -152,16 +152,16 @@ void mqtt_thread(void)
     }
     printf("[AWS] Client connected.\r\n");
     printf("\r\n");
-
-    printf("[AWS] Client is trying to subscribe a topic \"%s\".\r\n", MQTT_TOPIC_SUB);
+    
+    printf("[AWS] Client is trying to subscribe a topic \"%s\".\r\n", MQTT_TOPIC_CMD);
     {
-        int rc = mqttClient->subscribe(MQTT_TOPIC_SUB, MQTT::QOS0, messageArrived);
+        int rc = mqttClient->subscribe(MQTT_TOPIC_CMD, MQTT::QOS0, messageArrived);
         if (rc != MQTT::SUCCESS) {
             printf("[AWS] ERROR: rc from MQTT subscribe is %d\r\n", rc);
         }
         isSubscribed = true;
     }
-    printf("[AWS] Client has subscribed a topic \"%s\".\r\n", MQTT_TOPIC_SUB);
+    printf("[AWS] Client has subscribed a topic \"%s\".\r\n", MQTT_TOPIC_CMD);
     
     isPublish = false;
     
@@ -188,6 +188,7 @@ void mqtt_thread(void)
         /* Publish data */
         if(isPublish) {
             isPublish = false;
+            printf("%s\n",json);
             static unsigned short id = 0;
 
             // When sending a message, LED lights blue.
@@ -203,14 +204,21 @@ void mqtt_thread(void)
 
             message.qos = MQTT::QOS0;
             message.id = id++;
-            int ret = snprintf(buf, buf_size, "%d", button_count);
+            int ret = snprintf(buf, buf_size, "%s", json);
             if(ret < 0) {
                 printf("[AWS] ERROR: snprintf() returns %d.", ret);
                 continue;
             }
             message.payloadlen = ret;
             // Publish a message.
-            int rc = mqttClient->publish(MQTT_TOPIC_SUB, message);
+            
+            int rc = MQTT::FAILURE;
+            if(isButtonClicked){
+                isButtonClicked = false;
+                rc = mqttClient->publish(MQTT_TOPIC_CMD, message);
+            }else{
+                rc = mqttClient->publish(MQTT_TOPIC_DATA, message);
+            }
             if(rc != MQTT::SUCCESS) {
                 printf("[AWS] ERROR: rc from MQTT publish is %d\r\n", rc);
             }
@@ -226,7 +234,7 @@ void mqtt_thread(void)
 
     if(mqttClient) {
         if(isSubscribed) {
-            mqttClient->unsubscribe(MQTT_TOPIC_SUB);
+            mqttClient->unsubscribe(MQTT_TOPIC_DATA);
         }
         if(mqttClient->isConnected()) 
             mqttClient->disconnect();
