@@ -53,6 +53,11 @@ char messageBuffer[MESSAGE_BUFFER_SIZE];
 extern NetworkInterface* network;
 extern int button_count;
 
+extern const uint8_t MBED_CLOUD_DEV_BOOTSTRAP_DEVICE_CERTIFICATE[];
+extern const uint8_t MBED_CLOUD_DEV_BOOTSTRAP_DEVICE_PRIVATE_KEY[];
+extern const uint32_t MBED_CLOUD_DEV_BOOTSTRAP_DEVICE_CERTIFICATE_SIZE;
+extern const uint32_t MBED_CLOUD_DEV_BOOTSTRAP_DEVICE_PRIVATE_KEY_SIZE;
+
 /*
  * Callback function called when a message arrived from server.
  */
@@ -124,7 +129,11 @@ void mqtt_thread(void)
             printf("Could not set ca cert! Error code %d\n", ret);
             ThisThread::sleep_for(-1);
         }
-        ret = socket->set_client_cert_key(SSL_CLIENT_CERT_PEM, SSL_CLIENT_PRIVATE_KEY_PEM);
+        ret = socket->set_client_cert_key(
+                MBED_CLOUD_DEV_BOOTSTRAP_DEVICE_CERTIFICATE,
+                MBED_CLOUD_DEV_BOOTSTRAP_DEVICE_CERTIFICATE_SIZE,
+                MBED_CLOUD_DEV_BOOTSTRAP_DEVICE_PRIVATE_KEY,
+                MBED_CLOUD_DEV_BOOTSTRAP_DEVICE_PRIVATE_KEY_SIZE);
         if (ret != NSAPI_ERROR_OK) {
             printf("Could not set keys! Error code %d\n", ret);
             ThisThread::sleep_for(-1);
